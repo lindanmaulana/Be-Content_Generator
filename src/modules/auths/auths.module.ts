@@ -6,14 +6,30 @@ import { PassportModule } from '@nestjs/passport';
 import { WinstonModule } from 'nest-winston';
 import { AuthsController } from './auths.controller';
 import { AuthsService } from './auths.service';
+import bcrypt from 'bcrypt';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { AuthPrismaRepository } from './infrastructure/auth-prisma,.repository';
+import { PrismaModule } from '@/core/database/prisma/prisma.module';
 
 @Module({
 	imports: [
+		PrismaModule,
 		PassportModule,
 		WinstonModule.forRootAsync({ useClass: WinstonConfig }),
 		JwtModule.registerAsync({ useClass: JwtConfigService }),
 	],
 	controllers: [AuthsController],
-	providers: [AuthsService],
+	providers: [
+		AuthsService,
+		JwtStrategy,
+		{
+			provide: 'LIB_HASH',
+			useValue: bcrypt,
+		},
+		{
+			provide: 'AUTH_REPOSITORY',
+			useClass: AuthPrismaRepository,
+		},
+	],
 })
 export class AuthsModule {}

@@ -1,18 +1,44 @@
-import { Inject, Injectable, InternalServerErrorException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
 	protected logContext = this.constructor.name;
 	constructor(@Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: Logger) {
-		const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+		const dbUrl = process.env.DATABASE_URL;
+
+		if (!dbUrl) {
+			throw new Error('DATABASE_URL is missing in environment variables');
+		}
+
+		const pool = new Pool({ connectionString: dbUrl });
 		const adapter = new PrismaPg(pool);
 
-		super({ adapter });
+		super({
+			adapter,
+			log: [
+				{
+					emit: 'event',
+					level: 'query',
+				},
+				{
+					emit: 'event',
+					level: 'error',
+				},
+				{
+					emit: 'event',
+					level: 'info',
+				},
+				{
+					emit: 'event',
+					level: 'warn',
+				},
+			],
+		});
 	}
 
 	async onModuleInit() {
@@ -26,7 +52,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 				context: this.logContext,
 				error: err instanceof Error ? err.message : 'Unknown error',
 			});
-			throw new InternalServerErrorException('Terjadi kesalahan pada sistem, please try again later');
+
+			process.exit(1);
 		}
 	}
 

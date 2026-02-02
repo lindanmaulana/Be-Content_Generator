@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { ROLE_USERS } from '@prisma/client';
 
-export class User {
+export class Auth {
 	constructor(
 		private readonly _id: string | undefined,
 		private _name: string,
@@ -26,8 +26,8 @@ export class User {
 		role: ROLE_USERS;
 		created_at: Date;
 		updated_at: Date;
-	}): User {
-		return new User(
+	}): Auth {
+		return new Auth(
 			props.id,
 			props.name,
 			props.email,
@@ -38,8 +38,28 @@ export class User {
 		);
 	}
 
-	static create(props: { name: string; email: string; password: string; role: ROLE_USERS }): User {
-		return new User(undefined, props.name, props.email, props.password, props.role, new Date(), new Date());
+	static create(props: { name: string; email: string; password: string; role: ROLE_USERS }): Auth {
+		const auth = new Auth(undefined, props.name, props.email, props.password, props.role, new Date(), new Date());
+		auth.validate();
+
+		return auth;
+	}
+
+	private validate() {
+		if (!this._email.endsWith('@gmail.com')) throw new BadRequestException('Format email tidak valid');
+		if (this._name.length < 3) throw new BadRequestException('Nama terlalu pendek');
+	}
+
+	private updated() {
+		this._updated_at = new Date();
+	}
+
+	private thisTime() {
+		return new Date();
+	}
+
+	public isAdmin(): boolean {
+		return this.role === ROLE_USERS.ADMIN;
 	}
 
 	changeEmail(email: string) {
@@ -51,30 +71,32 @@ export class User {
 	}
 
 	get id(): string {
-		return this.id;
+		if (this._id === undefined) throw new Error('Id cannot be accessed because the entity is not persisted yet.');
+
+		return this._id;
 	}
 
 	get name(): string {
-		return this.name;
+		return this._name;
 	}
 
 	get email(): string {
-		return this.email;
+		return this._email;
 	}
 
 	get role(): ROLE_USERS {
-		return this.role;
+		return this._role;
 	}
 
 	get password(): string {
-		return this.password;
+		return this._password;
 	}
 
-	private updated() {
-		this._updated_at = new Date();
+	get createdAt(): Date {
+		return this._created_at;
 	}
 
-	private thisTime() {
-		return new Date();
+	get updatedAt(): Date {
+		return this._updated_at;
 	}
 }

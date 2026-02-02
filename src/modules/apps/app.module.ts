@@ -11,6 +11,7 @@ import { AiRequestsModule } from '../ai-requests/ai-requests.module';
 import { UsersModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthsModule } from '../auths/auths.module';
 
 @Module({
 	imports: [
@@ -38,6 +39,7 @@ import { AppService } from './app.service';
 		WinstonModule.forRootAsync({ useClass: WinstonConfig }),
 		PrismaModule,
 		UsersModule,
+		AuthsModule,
 		AiRequestsModule,
 	],
 	controllers: [AppController],

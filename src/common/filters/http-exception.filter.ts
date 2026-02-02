@@ -35,8 +35,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 			statusCode: status,
 			success: false,
 			message: message,
-			data: null,
-			...(errors && { errors: errors }),
+			...(errors ? { errors: errors } : { errors: null }),
 		});
 	}
 }

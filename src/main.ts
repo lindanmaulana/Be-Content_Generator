@@ -5,9 +5,11 @@ import cookieParser from 'cookie-parser';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+	const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
 	app.enableCors({
 		origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -38,10 +40,19 @@ async function bootstrap() {
 		}),
 	);
 
+	app.set('trust proxy', 'loopback');
 	app.use(cookieParser());
 	app.useGlobalFilters(new GlobalExceptionFilter());
 	app.useGlobalPipes(new ZodValidationPipe());
 	app.useGlobalInterceptors(new ResponseInterceptor(app.get(Reflector)));
+
+	const config = new DocumentBuilder()
+		.setTitle('Ai Content Generator')
+		.setDescription('Dokumentasi API Service Ai Content Generator Nestjs')
+		.setVersion('1.0')
+		.build();
+	const document = SwaggerModule.createDocument(app, config);
+	SwaggerModule.setup('Api', app, document);
 
 	await app.listen(process.env.PORT ?? 3000);
 }
