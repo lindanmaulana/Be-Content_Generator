@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseInterceptors } from '@nestjs/common';
 import { AuthsService } from './auths.service';
 import { ResponseMessage } from '@/common/decorators/response-message.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -9,12 +9,13 @@ import { CookieInterceptor } from '@/common/interceptors/cookie.interceptor';
 import { SetCookie } from '@/common/decorators/set-cookie.decorator';
 import { Cookies } from '@/common/enums/cookies_enum';
 
-@Controller('auths')
+@Controller('auth')
 @ApiTags('Authentication')
 export class AuthsController {
 	constructor(private readonly authService: AuthsService) {}
 
 	@Post('login')
+	@HttpCode(HttpStatus.OK)
 	@UseInterceptors(CookieInterceptor)
 	@SetCookie(Cookies.ACCESS_TOKEN)
 	@ResponseMessage('Login berhasil')

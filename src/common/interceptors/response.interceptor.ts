@@ -27,7 +27,6 @@ export class ResponseInterceptor implements NestInterceptor {
 	intercept(ctx: ExecutionContext, next: CallHandler<any>): Observable<any> | Promise<Observable<any>> {
 		const httpContext = ctx.switchToHttp();
 		const res: Response = httpContext.getResponse();
-
 		const resMessage = this.reflector.get<string>(RESPONSE_MESSAGE_KEY, ctx.getHandler()) || 'Operation Successful';
 
 		const isObject = (val: unknown): val is Record<string, any> => {
@@ -43,15 +42,15 @@ export class ResponseInterceptor implements NestInterceptor {
 				};
 
 				if (isObject(payload)) {
-					const base = payload as StandardPayload;
+					const { data, meta, access_token, ...rest } = payload as StandardPayload;
 
-					if (base.meta) {
-						return { ...response, data: base.data, meta: base.meta };
+					if (meta) {
+						return { ...response, data: data ?? rest, meta: meta };
 					}
 
-					if (base.access_token) return { ...response, data: base.data };
+					if (access_token) return { ...response, data: data ?? rest };
 
-					if (base.data !== undefined) return { ...response, data: base.data };
+					if (data !== undefined) return { ...response, data: data };
 				}
 
 				return { ...response, data: payload };

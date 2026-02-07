@@ -26,20 +26,22 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  ai_requests Ai_request[]
+  ai_requests Generation[]
 
   @@map("users")
   @@index([name])
 }
 
-model Ai_request {
+model Generation {
   id String @id @default(uuid())
   user_id String
   prompt String @db.VarChar(150)
-  result String @db.Text()
+  result String? @db.Text()
   created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@map("ai_requests")
+  @@map("generations")
 }
+

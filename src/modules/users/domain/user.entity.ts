@@ -51,23 +51,33 @@ export class User {
 	}
 
 	get id(): string {
-		return this.id;
+		if (this._id === undefined) throw new Error('Id cannot be accessed because the entity is not persisted yet.');
+
+		return this._id;
 	}
 
 	get name(): string {
-		return this.name;
+		return this._name;
 	}
 
 	get email(): string {
-		return this.email;
+		return this._email;
 	}
 
 	get role(): ROLE_USERS {
-		return this.role;
+		return this._role;
 	}
 
 	get password(): string {
-		return this.password;
+		return this._password;
+	}
+
+	get createdAt(): Date {
+		return this._created_at;
+	}
+
+	get updatedAt(): Date {
+		return this._updated_at;
 	}
 
 	private updated() {

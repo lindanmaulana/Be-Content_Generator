@@ -1,0 +1,20 @@
+import { REPOSITORY_TOKENS } from '@/common/constants/tokens';
+import { PrismaModule } from '@/core/database/prisma/prisma.module';
+import { Module } from '@nestjs/common';
+import { UsersModule } from '../users/users.module';
+import { GenerationsController } from './generations.controller';
+import { GenerationsService } from './generations.service';
+import { GenerationPrismaRepository } from './infrastructure/generations-prisma.repository';
+
+@Module({
+	imports: [PrismaModule, UsersModule],
+	controllers: [GenerationsController],
+	providers: [
+		GenerationsService,
+		{
+			provide: REPOSITORY_TOKENS.GENERATION,
+			useClass: GenerationPrismaRepository,
+		},
+	],
+})
+export class GenerationsModule {}

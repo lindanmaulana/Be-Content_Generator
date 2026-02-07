@@ -1,34 +1,24 @@
 import { JwtConfigService } from '@/common/configs/jwt,config';
-import { WinstonConfig } from '@/common/configs/winston.config';
+import { LIBRARY_TOKENS } from '@/common/constants/tokens';
+import { PrismaModule } from '@/core/database/prisma/prisma.module';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { WinstonModule } from 'nest-winston';
+import bcrypt from 'bcrypt';
+import { UsersModule } from '../users/users.module';
 import { AuthsController } from './auths.controller';
 import { AuthsService } from './auths.service';
-import bcrypt from 'bcrypt';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { AuthPrismaRepository } from './infrastructure/auth-prisma,.repository';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
 
 @Module({
-	imports: [
-		PrismaModule,
-		PassportModule,
-		WinstonModule.forRootAsync({ useClass: WinstonConfig }),
-		JwtModule.registerAsync({ useClass: JwtConfigService }),
-	],
+	imports: [PrismaModule, PassportModule, UsersModule, JwtModule.registerAsync({ useClass: JwtConfigService })],
 	controllers: [AuthsController],
 	providers: [
 		AuthsService,
 		JwtStrategy,
 		{
-			provide: 'LIB_HASH',
+			provide: LIBRARY_TOKENS.HASH,
 			useValue: bcrypt,
-		},
-		{
-			provide: 'AUTH_REPOSITORY',
-			useClass: AuthPrismaRepository,
 		},
 	],
 })

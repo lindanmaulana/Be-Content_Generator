@@ -7,11 +7,11 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
 import 'winston-daily-rotate-file';
-import { AiRequestsModule } from '../ai-requests/ai-requests.module';
+import { AuthsModule } from '../auths/auths.module';
 import { UsersModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthsModule } from '../auths/auths.module';
+import { GenerationsModule } from '../generations/generations.module';
 
 @Module({
 	imports: [
@@ -40,7 +40,7 @@ import { AuthsModule } from '../auths/auths.module';
 		PrismaModule,
 		UsersModule,
 		AuthsModule,
-		AiRequestsModule,
+		GenerationsModule,
 	],
 	controllers: [AppController],
 	providers: [
