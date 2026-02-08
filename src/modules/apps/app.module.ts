@@ -13,6 +13,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GenerationsModule } from '../generations/generations.module';
 import { AiModule } from '../ai/ai.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
 	imports: [
@@ -38,6 +39,10 @@ import { AiModule } from '../ai/ai.module';
 			errorMessage: 'Batas permintaan terlampaui. Silahkan coba lagi nanti.',
 		}),
 		WinstonModule.forRootAsync({ useClass: WinstonConfig }),
+		CacheModule.register({
+			isGlobal: true,
+			ttl: 1000 * 60 * 10,
+		}),
 		AiModule,
 		PrismaModule,
 		UsersModule,

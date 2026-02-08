@@ -1,6 +1,6 @@
 import { REPOSITORY_TOKENS } from '@/common/constants/tokens';
 import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
-import { calculatePagination } from '@/common/utils/pagination.util';
+import { calculatePagination, Pagination } from '@/common/utils/pagination.util';
 import { Generation } from '@/modules/generations/domain/generations.entity';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { GenerationStatus } from '@prisma/client';
@@ -13,6 +13,7 @@ import type { GenerationRepository } from './domain/generations.repository';
 import { CreateGenerationDto, CreateGenerationResponseDto } from './dto/create-generation.dto';
 import { FindAllGenerationDto, FindAllGenerationResponseDto } from './dto/find-all-generation.dto';
 import { GenerationResponseMapper } from './infrastructure/generations-response.mapper';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class GenerationsService {
@@ -22,10 +23,22 @@ export class GenerationsService {
 		@Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: Logger,
 		@Inject(REPOSITORY_TOKENS.GENERATION) private readonly generationRepository: GenerationRepository,
 		@Inject(REPOSITORY_TOKENS.USER) private readonly userRepository: UserRepository,
+		@Inject(CACHE_MANAGER) private cacheManager: Cache,
 		private readonly googleAiService: GoogleAiService,
 	) {}
 
 	async findAll(userId: string, query: FindAllGenerationDto): Promise<FindAllGenerationResponseDto> {
+		const versionKey = `user_version:${userId}`;
+		const version = (await this.cacheManager.get<number>(versionKey)) || 1;
+
+		const cacheKey = `history:${userId}:v${version}:p${query.page}`;
+		const cacheData = await this.cacheManager.get(cacheKey);
+
+		if (cacheData) {
+			return cacheData as FindAllGenerationResponseDto;
+		}
+
+		this.logger.log('FindAll started to hit DB: ', { context: this.logContext, user_id: userId });
 		const checkUser = await this.userRepository.findById(userId);
 		if (!checkUser) {
 			this.logger.warn('Pegguna tidak di temukan', { context: this.logContext, user_id: userId });
@@ -34,10 +47,12 @@ export class GenerationsService {
 
 		const countResult = await this.generationRepository.findCount({ user_id: userId }, query);
 		const pagination = calculatePagination(countResult, query);
-
 		const result = await this.generationRepository.findAll({ user_id: userId }, query);
 
-		return GenerationResponseMapper.toFindAllResponse(pagination, result);
+		const finalResponse = GenerationResponseMapper.toFindAllResponse(pagination, result);
+		await this.cacheManager.set(cacheKey, JSON.stringify(finalResponse));
+
+		return finalResponse;
 	}
 
 	async create(user: JwtPayload, dto: CreateGenerationDto): Promise<CreateGenerationResponseDto> {

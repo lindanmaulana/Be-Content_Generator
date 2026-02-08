@@ -24,6 +24,8 @@ export class GenerationPrismaRepository extends BaseRepository {
 				take: pagination.limit,
 			});
 
+			console.log({ HITDB: `Cek Cek 100` });
+
 			return result.map((generation) => GenerationPersistanceMapper.toEntity(generation));
 		});
 	}
