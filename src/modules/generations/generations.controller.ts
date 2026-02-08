@@ -19,8 +19,11 @@ export class GenerationsController {
 	@ResponseMessage('Data generate telah berhasil diambil')
 	@ApiOperation({ summary: 'Get all generation' })
 	@SetApiSuccessResponse(FindAllGenerationResponseDto, 200)
-	async getAll(@Query() query: FindAllGenerationDto): Promise<FindAllGenerationResponseDto> {
-		return this.generationService.findAll(query);
+	async getAll(
+		@GetUser() user: JwtPayload,
+		@Query() query: FindAllGenerationDto,
+	): Promise<FindAllGenerationResponseDto> {
+		return this.generationService.findAll(user.id, query);
 	}
 
 	@Post()

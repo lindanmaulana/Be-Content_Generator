@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Generation } from '../domain/generations.entity';
 import { CreateGenerationResponseDto } from '../dto/create-generation.dto';
+import { FindAllGenerationResponseDto } from '../dto/find-all-generation.dto';
+import { Pagination } from '@/common/utils/pagination.util';
 
 @Injectable()
 export class GenerationResponseMapper {
@@ -17,6 +19,13 @@ export class GenerationResponseMapper {
 			total_tokens: generation.totalTokens,
 			created_at: generation.createdAt.toISOString(),
 			updated_at: generation.updatedAt.toISOString(),
+		};
+	}
+
+	static toFindAllResponse(pagination: Pagination, generations: Generation[]): FindAllGenerationResponseDto {
+		return {
+			data: generations.map((generation) => this.base(generation)),
+			meta: pagination,
 		};
 	}
 

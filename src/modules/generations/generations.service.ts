@@ -1,5 +1,6 @@
 import { REPOSITORY_TOKENS } from '@/common/constants/tokens';
 import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
+import { calculatePagination } from '@/common/utils/pagination.util';
 import { Generation } from '@/modules/generations/domain/generations.entity';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { GenerationStatus } from '@prisma/client';
@@ -10,8 +11,8 @@ import { GeminiUsageMetadata } from '../google-ai/interfaces/google-ai-response.
 import type { UserRepository } from '../users/domain/user.repository';
 import type { GenerationRepository } from './domain/generations.repository';
 import { CreateGenerationDto, CreateGenerationResponseDto } from './dto/create-generation.dto';
-import { GenerationResponseMapper } from './infrastructure/generations-response.mapper';
 import { FindAllGenerationDto, FindAllGenerationResponseDto } from './dto/find-all-generation.dto';
+import { GenerationResponseMapper } from './infrastructure/generations-response.mapper';
 
 @Injectable()
 export class GenerationsService {
@@ -24,7 +25,20 @@ export class GenerationsService {
 		private readonly googleAiService: GoogleAiService,
 	) {}
 
-	async findAll(query: FindAllGenerationDto): Promise<FindAllGenerationResponseDto> {}
+	async findAll(userId: string, query: FindAllGenerationDto): Promise<FindAllGenerationResponseDto> {
+		const checkUser = await this.userRepository.findById(userId);
+		if (!checkUser) {
+			this.logger.warn('Pegguna tidak di temukan', { context: this.logContext, user_id: userId });
+			throw new NotFoundException('Pengguna belum terdaftar, please check your account!');
+		}
+
+		const countResult = await this.generationRepository.findCount({ user_id: userId }, query);
+		const pagination = calculatePagination(countResult, query);
+
+		const result = await this.generationRepository.findAll({ user_id: userId }, query);
+
+		return GenerationResponseMapper.toFindAllResponse(pagination, result);
+	}
 
 	async create(user: JwtPayload, dto: CreateGenerationDto): Promise<CreateGenerationResponseDto> {
 		this.logger.log('Generation create started', { context: this.logContext, email: user.email });

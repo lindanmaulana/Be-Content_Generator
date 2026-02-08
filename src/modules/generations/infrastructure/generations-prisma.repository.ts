@@ -5,6 +5,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Generation } from '../domain/generations.entity';
 import { GenerationPersistanceMapper } from './generations-persistance.mapper';
+import { GenerationFilters, GenerationPaginationParams } from '../domain/generation.repository.interface';
 
 @Injectable()
 export class GenerationPrismaRepository extends BaseRepository {
@@ -13,6 +14,30 @@ export class GenerationPrismaRepository extends BaseRepository {
 		private prismaService: PrismaService,
 	) {
 		super(logger, GenerationPrismaRepository.name);
+	}
+
+	async findAll(filters: GenerationFilters, pagination: GenerationPaginationParams): Promise<Generation[]> {
+		return this.tryCatch(async () => {
+			const result = await this.prismaService.generation.findMany({
+				where: { user_id: filters.user_id },
+				skip: (pagination.page - 1) * pagination.limit,
+				take: pagination.limit,
+			});
+
+			return result.map((generation) => GenerationPersistanceMapper.toEntity(generation));
+		});
+	}
+
+	async findCount(filters: GenerationFilters, pagination: GenerationPaginationParams): Promise<number> {
+		return this.tryCatch(async () =>
+			this.prismaService.generation.count({
+				where: {
+					user_id: filters.user_id,
+				},
+				skip: (pagination.page - 1) * pagination.limit,
+				take: pagination.limit,
+			}),
+		);
 	}
 
 	async create(generation: Generation): Promise<Generation> {

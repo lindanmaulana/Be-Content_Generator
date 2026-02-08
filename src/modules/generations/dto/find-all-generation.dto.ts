@@ -9,7 +9,7 @@ export class FindAllGenerationDto extends createZodDto(FindAllGenerationSchema) 
 }
 
 export const FindAllGenerationResponseSchema = z.object({
-	data: BaseGenerationSchema,
+	data: z.array(BaseGenerationSchema),
 	meta: PaginationMetaSchema,
 });
 export class FindAllGenerationResponseDto extends createZodDto(FindAllGenerationResponseSchema) {}

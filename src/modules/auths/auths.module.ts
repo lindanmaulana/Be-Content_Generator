@@ -1,4 +1,4 @@
-import { JwtConfigService } from '@/common/configs/jwt,config';
+import { JwtConfigService } from '@/common/configs/jwt.config';
 import { LIBRARY_TOKENS } from '@/common/constants/tokens';
 import { PrismaModule } from '@/core/database/prisma/prisma.module';
 import { Module } from '@nestjs/common';
