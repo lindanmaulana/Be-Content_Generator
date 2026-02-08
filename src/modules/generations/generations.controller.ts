@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateGenerationDto, CreateGenerationResponseDto } from './dto/create-generation.dto';
 import { ResponseMessage } from '@/common/decorators/response-message.decorator';
@@ -7,6 +7,7 @@ import { SetApiSuccessResponse } from '@/common/decorators/set-api-success-respo
 import { GenerationsService } from './generations.service';
 import { GetUser } from '@/common/decorators/get-user.decorator';
 import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
+import { FindAllGenerationDto, FindAllGenerationResponseDto } from './dto/find-all-generation.dto';
 
 @Controller('generations')
 @ApiTags('Generations')
@@ -14,8 +15,16 @@ import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 export class GenerationsController {
 	constructor(private readonly generationService: GenerationsService) {}
 
+	@Get()
+	@ResponseMessage('Data generate telah berhasil diambil')
+	@ApiOperation({ summary: 'Get all generation' })
+	@SetApiSuccessResponse(FindAllGenerationResponseDto, 200)
+	async getAll(@Query() query: FindAllGenerationDto): Promise<FindAllGenerationResponseDto> {
+		return this.generationService.findAll(query);
+	}
+
 	@Post()
-	@ResponseMessage('Send message success')
+	@ResponseMessage('Berhasil mengirim prompt')
 	@ApiOperation({ summary: 'Generate Content' })
 	@SetApiSuccessResponse(CreateGenerationResponseDto, HttpStatus.CREATED)
 	async create(

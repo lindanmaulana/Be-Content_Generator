@@ -5,9 +5,10 @@ import { UsersModule } from '../users/users.module';
 import { GenerationsController } from './generations.controller';
 import { GenerationsService } from './generations.service';
 import { GenerationPrismaRepository } from './infrastructure/generations-prisma.repository';
+import { GoogleAiModule } from '../google-ai/google-ai.module';
 
 @Module({
-	imports: [PrismaModule, UsersModule],
+	imports: [PrismaModule, UsersModule, GoogleAiModule],
 	controllers: [GenerationsController],
 	providers: [
 		GenerationsService,

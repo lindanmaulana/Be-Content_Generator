@@ -10,19 +10,21 @@ export class GenerationResponseMapper {
 			user_id: generation.userId,
 			prompt: generation.prompt,
 			result: generation.result,
-			created_at: generation.createdAt,
-			updated_at: generation.updatedAt,
+			status: generation.status,
+			prompt_tokens: generation.promptTokens,
+			completion_tokens: generation.completionTokens,
+			throught_tokens: generation.thoughtsTokens,
+			total_tokens: generation.totalTokens,
+			created_at: generation.createdAt.toISOString(),
+			updated_at: generation.updatedAt.toISOString(),
 		};
 	}
 
 	static toCreateResponse(generation: Generation): CreateGenerationResponseDto {
-		return {
-			id: generation.id,
-			user_id: generation.userId,
-			prompt: generation.prompt,
-			result: generation.result,
-			created_at: generation.createdAt.toISOString(),
-			updated_at: generation.updatedAt.toISOString(),
-		};
+		return this.base(generation);
+	}
+
+	static toUpdateResponse(generation: Generation): CreateGenerationResponseDto {
+		return this.base(generation);
 	}
 }

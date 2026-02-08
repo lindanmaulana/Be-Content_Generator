@@ -17,6 +17,12 @@ enum ROLE_USERS {
   CUSTOMER
 }
 
+enum GenerationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model User {
   id String @id @default(uuid())
   name String @db.VarChar(100)
@@ -35,8 +41,15 @@ model User {
 model Generation {
   id String @id @default(uuid())
   user_id String
-  prompt String @db.VarChar(150)
+  prompt String @db.VarChar(200)
   result String? @db.Text()
+  status GenerationStatus @default(PENDING)
+
+  prompt_tokens Int @db.Integer
+  completion_tokens Int @db.Integer
+  total_tokens Int @db.Integer
+  thoughts_tokens Int @db.Integer
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -44,4 +57,3 @@ model Generation {
 
   @@map("generations")
 }
-

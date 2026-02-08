@@ -12,6 +12,7 @@ import { UsersModule } from '../users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GenerationsModule } from '../generations/generations.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
 	imports: [
@@ -37,6 +38,7 @@ import { GenerationsModule } from '../generations/generations.module';
 			errorMessage: 'Batas permintaan terlampaui. Silahkan coba lagi nanti.',
 		}),
 		WinstonModule.forRootAsync({ useClass: WinstonConfig }),
+		AiModule,
 		PrismaModule,
 		UsersModule,
 		AuthsModule,

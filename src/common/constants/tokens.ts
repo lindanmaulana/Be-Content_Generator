@@ -6,4 +6,5 @@ export const REPOSITORY_TOKENS = {
 
 export const LIBRARY_TOKENS = {
 	HASH: Symbol('LIB_HASH'),
+	GEMINI_AI: Symbol('GEMINI_CLIENT'),
 } as const;
