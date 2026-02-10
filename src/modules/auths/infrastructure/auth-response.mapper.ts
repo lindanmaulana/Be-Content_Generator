@@ -1,4 +1,4 @@
-import { User } from '@/modules/users/domain/user.entity';
+import { User } from '@/modules/users/domain/users.entity';
 import { UserResponseMapper } from '@/modules/users/infrastructure/user-response.mapper';
 import { Injectable } from '@nestjs/common';
 import { AuthLoginResponseDto } from '../dto/auth-login.dto';

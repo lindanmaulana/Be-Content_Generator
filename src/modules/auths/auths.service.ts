@@ -1,13 +1,13 @@
 import { LIBRARY_TOKENS, REPOSITORY_TOKENS } from '@/common/constants/tokens';
 import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
-import { User } from '@/modules/users/domain/user.entity';
+import { User } from '@/modules/users/domain/users.entity';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ROLE_USERS } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import type { UserRepository } from '../users/domain/user.repository';
+import type { UserRepository } from '../users/domain/users.repository';
 import { AuthLoginDto, AuthLoginResponseDto } from './dto/auth-login.dto';
 import { AuthRegisterDto, AuthRegisterResponseDto } from './dto/auth-register.dto';
 import { AuthResponseMapper } from './infrastructure/auth-response.mapper';

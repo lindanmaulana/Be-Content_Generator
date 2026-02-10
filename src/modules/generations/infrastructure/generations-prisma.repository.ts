@@ -42,6 +42,24 @@ export class GenerationPrismaRepository extends BaseRepository {
 		);
 	}
 
+	async findDailyTokenUsage(userId: string): Promise<number> {
+		return this.tryCatch(async () => {
+			const startOfDay = new Date();
+			startOfDay.setHours(0, 0, 0, 0);
+
+			const result = await this.prismaService.generation.aggregate({
+				where: { user_id: userId, created_at: { gte: startOfDay } },
+				_sum: {
+					total_tokens: true,
+				},
+			});
+
+			if (!result._sum.total_tokens) return 0;
+
+			return result._sum.total_tokens;
+		});
+	}
+
 	async create(generation: Generation): Promise<Generation> {
 		return this.tryCatch(async () => {
 			const record = GenerationPersistanceMapper.toPersistance(generation);

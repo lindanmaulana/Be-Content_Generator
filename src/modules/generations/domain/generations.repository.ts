@@ -6,4 +6,6 @@ export interface GenerationRepository {
 	findCount(filters: GenerationFilters, pagination: GenerationPaginationParams): Promise<number>;
 	create(generation: Generation): Promise<Generation>;
 	update(generation: Generation): Promise<Generation>;
+
+	findDailyTokenUsage(userId: string): Promise<number>;
 }

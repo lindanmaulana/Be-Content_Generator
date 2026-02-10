@@ -1,5 +1,5 @@
 import { User as PrismaUser } from '@prisma/client';
-import { User } from '@/modules/users/domain/user.entity';
+import { User } from '@/modules/users/domain/users.entity';
 
 export class UserPersistanceMapper {
 	static toEntity(user: PrismaUser): User {

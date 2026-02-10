@@ -2,9 +2,10 @@ import { BaseRepository } from '@/core/database/prisma/base.repository';
 import { Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { User } from '@/modules/users/domain/user.entity';
+import { User } from '@/modules/users/domain/users.entity';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { UserPersistanceMapper } from './user-persistance.mapper';
+import { PaginationUserParams } from '../domain/users.repository.interface';
 
 @Injectable()
 export class UserPrismaRepository extends BaseRepository {
@@ -13,6 +14,17 @@ export class UserPrismaRepository extends BaseRepository {
 		private prismaService: PrismaService,
 	) {
 		super(logger, UserPrismaRepository.name);
+	}
+
+	async findAll(pagination: PaginationUserParams): Promise<User[]> {
+		return this.tryCatch(async () => {
+			const result = await this.prismaService.user.findMany({
+				skip: (pagination.page - 1) * pagination.limit,
+				take: pagination.limit,
+			});
+
+			return result.map((user) => UserPersistanceMapper.toEntity(user));
+		});
 	}
 
 	async findById(id: string): Promise<User | null> {
@@ -33,6 +45,12 @@ export class UserPrismaRepository extends BaseRepository {
 
 			return UserPersistanceMapper.toEntity(result);
 		});
+	}
+
+	async findCount(pagination: PaginationUserParams): Promise<number> {
+		return this.tryCatch(() =>
+			this.prismaService.user.count({ skip: (pagination.page - 1) * pagination.limit, take: pagination.limit }),
+		);
 	}
 
 	async create(user: User): Promise<User> {
