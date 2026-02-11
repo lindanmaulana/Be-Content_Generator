@@ -28,7 +28,7 @@ export class GenerationsController {
 
 	@Post()
 	@ResponseMessage('Berhasil mengirim prompt')
-	@ApiOperation({ summary: 'Generate Content' })
+	@ApiOperation({ summary: 'Create generation' })
 	@SetApiSuccessResponse(CreateGenerationResponseDto, HttpStatus.CREATED)
 	async create(
 		@GetUser() authUser: JwtPayload,

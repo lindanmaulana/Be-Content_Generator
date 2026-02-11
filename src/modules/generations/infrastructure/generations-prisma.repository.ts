@@ -24,8 +24,6 @@ export class GenerationPrismaRepository extends BaseRepository {
 				take: pagination.limit,
 			});
 
-			console.log({ HITDB: `Cek Cek 100` });
-
 			return result.map((generation) => GenerationPersistanceMapper.toEntity(generation));
 		});
 	}
@@ -42,7 +40,7 @@ export class GenerationPrismaRepository extends BaseRepository {
 		);
 	}
 
-	async findDailyTokenUsage(userId: string): Promise<number> {
+	async sumDailyTokenUsage(userId: string): Promise<number> {
 		return this.tryCatch(async () => {
 			const startOfDay = new Date();
 			startOfDay.setHours(0, 0, 0, 0);

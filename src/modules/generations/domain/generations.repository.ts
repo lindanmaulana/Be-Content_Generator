@@ -7,5 +7,5 @@ export interface GenerationRepository {
 	create(generation: Generation): Promise<Generation>;
 	update(generation: Generation): Promise<Generation>;
 
-	findDailyTokenUsage(userId: string): Promise<number>;
+	sumDailyTokenUsage(userId: string): Promise<number>;
 }

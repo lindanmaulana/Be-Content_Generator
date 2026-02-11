@@ -1,4 +1,5 @@
 import { REPOSITORY_TOKENS } from '@/common/constants/tokens';
+import { UserCacheFeature } from '@/common/enums/cache-feature.enum';
 import { calculatePagination } from '@/common/utils/pagination.util';
 import { MS } from '@/common/utils/time.utils';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -30,7 +31,7 @@ export class UsersService {
 		this.logger.log('GET users all started:', { context: this.logContext, userId: userId });
 		const version = await this.userCacheService.getVersion(userId);
 
-		const cacheKey = this.userCacheService.generateKey(userId, version, 'findAll');
+		const cacheKey = this.userCacheService.generateKey(UserCacheFeature.LIST, userId, version);
 		const cacheData = await this.cacheManager.get(cacheKey);
 		if (cacheData) return cacheData as GetAllUserResponseDto;
 
@@ -41,7 +42,7 @@ export class UsersService {
 		const result = await this.userRepository.findAll(query);
 
 		const finalResponse = UserResponseMapper.toGetAll(pagination, result);
-		await this.cacheManager.set(cacheKey, finalResponse);
+		await this.cacheManager.set(cacheKey, finalResponse, MS.MINUTE * 5);
 
 		return finalResponse;
 	}
@@ -50,7 +51,7 @@ export class UsersService {
 		this.logger.log('GET users profile started', { context: this.logContext, userId: userId });
 
 		const version = await this.userCacheService.getVersion(userId);
-		const cacheKey = this.userCacheService.generateKey(userId, version, 'profile');
+		const cacheKey = this.userCacheService.generateKey(UserCacheFeature.PROFILE, userId, version);
 		const cacheData = await this.cacheManager.get(cacheKey);
 
 		if (cacheData) {

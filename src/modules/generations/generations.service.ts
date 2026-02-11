@@ -1,71 +1,66 @@
 import { REPOSITORY_TOKENS, TOKENS_USAGE_LIMIT } from '@/common/constants/tokens';
+import { GenerationCacheFeature } from '@/common/enums/cache-feature.enum';
 import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { calculatePagination } from '@/common/utils/pagination.util';
+import { MS } from '@/common/utils/time.utils';
 import { Generation } from '@/modules/generations/domain/generations.entity';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { GenerationStatus } from '@prisma/client';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { GoogleAiService } from '../google-ai/google-ai.service';
 import { GeminiUsageMetadata } from '../google-ai/interfaces/google-ai-response.interface';
-import type { UserRepository } from '../users/domain/users.repository';
+import { UsersSharedService } from '../users/users-shared.service';
 import type { GenerationRepository } from './domain/generations.repository';
 import { CreateGenerationDto, CreateGenerationResponseDto } from './dto/create-generation.dto';
 import { FindAllGenerationDto, FindAllGenerationResponseDto } from './dto/find-all-generation.dto';
+import { GenerationsCacheService } from './generations-cache.service';
 import { GenerationResponseMapper } from './infrastructure/generations-response.mapper';
 
 @Injectable()
 export class GenerationsService {
 	protected logContext = this.constructor.name;
-	protected nameContext = 'generations';
 
 	constructor(
 		@Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: Logger,
 		@Inject(REPOSITORY_TOKENS.GENERATION) private readonly generationRepository: GenerationRepository,
-		@Inject(REPOSITORY_TOKENS.USER) private readonly userRepository: UserRepository,
 		@Inject(CACHE_MANAGER) private cacheManager: Cache,
 		private readonly googleAiService: GoogleAiService,
+		private readonly usersSharedService: UsersSharedService,
+		private readonly generationsCacheService: GenerationsCacheService,
 	) {}
 
 	async findAll(userId: string, query: FindAllGenerationDto): Promise<FindAllGenerationResponseDto> {
-		const versionKey = `user_version:${userId}`;
-		const version = (await this.cacheManager.get<number>(versionKey)) || 1;
+		this.logger.log('GET all generation started', { context: this.logContext, userId: userId });
 
-		const cacheKey = `history:${userId}:v${version}:ctx${this.nameContext}:p${query.page}`;
+		const version = await this.generationsCacheService.getVersion(userId);
+		const cacheKey = this.generationsCacheService.generateKey(GenerationCacheFeature.LIST, userId, version);
 		const cacheData = await this.cacheManager.get(cacheKey);
 
-		if (cacheData) return cacheData as FindAllGenerationResponseDto;
-
-		const checkUser = await this.userRepository.findById(userId);
-		if (!checkUser) {
-			this.logger.warn('Pegguna tidak di temukan', { context: this.logContext, user_id: userId });
-			throw new NotFoundException('Pengguna belum terdaftar, please check your account!');
+		if (cacheData) {
+			this.logger.log('GET all generation retrieved on cache', { context: this.logContext, userId: userId });
+			return cacheData as FindAllGenerationResponseDto;
 		}
+
+		await this.usersSharedService.validateUserExists(userId);
 
 		const countResult = await this.generationRepository.findCount({ user_id: userId }, query);
 		const pagination = calculatePagination(countResult, query);
 		const result = await this.generationRepository.findAll({ user_id: userId }, query);
 
 		const finalResponse = GenerationResponseMapper.toFindAllResponse(pagination, result);
-		await this.cacheManager.set(cacheKey, JSON.stringify(finalResponse));
+		await this.cacheManager.set(cacheKey, finalResponse, MS.MINUTE * 5);
 
 		return finalResponse;
 	}
 
 	async create(user: JwtPayload, dto: CreateGenerationDto): Promise<CreateGenerationResponseDto> {
-		this.logger.log('Generation create started', { context: this.logContext, email: user.email });
+		this.logger.log('CREATE generation started', { context: this.logContext, email: user.email });
 
-		const checkUser = await this.userRepository.findById(user.id);
-		if (!checkUser) {
-			this.logger.warn('Generation Create failed: User tidak ditemukan', {
-				context: this.logContext,
-				email: user.email,
-			});
-			throw new NotFoundException('Akun anda belum terdaftar!');
-		}
+		const checkUser = await this.usersSharedService.validateUserExists(user.id);
 
-		const checkTokenUsage = await this.generationRepository.findDailyTokenUsage(checkUser.id);
+		const checkTokenUsage = await this.generationRepository.sumDailyTokenUsage(checkUser.id);
 		if (checkTokenUsage >= TOKENS_USAGE_LIMIT) {
 			this.logger.warn('Request generate kontent gagal, jatah kuota harian habis', {
 				context: this.logContext,
@@ -84,16 +79,14 @@ export class GenerationsService {
 		});
 
 		let result = await this.generationRepository.create(record);
+		const lockGen = this.generationsCacheService.generateKey(GenerationCacheFeature.LOCK, user.id);
 
 		try {
-			const lockGen = `lock:gen:${checkUser.id}`;
 			const isLockedGen = await this.cacheManager.get(lockGen);
 			if (isLockedGen) throw new ConflictException('Sabar ya, proses sebelumnya masih jalan!');
-
 			await this.cacheManager.set(lockGen, true, 30000);
 
 			const aiResult = await this.googleAiService.generateContent(dto.prompt);
-
 			const usageTokens: GeminiUsageMetadata = {
 				promptTokenCount: aiResult.usageMetadata.promptTokenCount,
 				candidatesTokenCount: aiResult.usageMetadata.candidatesTokenCount,
@@ -120,6 +113,8 @@ export class GenerationsService {
 			await this.generationRepository.update(result);
 
 			throw err;
+		} finally {
+			await this.cacheManager.del(lockGen);
 		}
 
 		return GenerationResponseMapper.toCreateResponse(result);
