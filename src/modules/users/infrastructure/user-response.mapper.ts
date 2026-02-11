@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '../domain/users.entity';
 import { PaginationMeta } from '@/common/schemas/pagination.schema';
-import { FindAllUserResponseDto } from '../dto/find-all-user.dto';
+import { GetAllUserResponseDto } from '../dto/get-all-user.dto';
+import { GetProfileUserResponseDto } from '../dto/get-profile-user.dto';
+import { UpdateProfileUserResponseDto } from '../dto/update-profile-user.dto';
 
 @Injectable()
 export class UserResponseMapper {
@@ -16,10 +18,18 @@ export class UserResponseMapper {
 		};
 	}
 
-	static toFindAll(pagination: PaginationMeta, users: User[]): FindAllUserResponseDto {
+	static toGetAll(pagination: PaginationMeta, users: User[]): GetAllUserResponseDto {
 		return {
 			data: users.map((user) => this.base(user)),
 			meta: pagination,
 		};
+	}
+
+	static toGetProfile(user: User): GetProfileUserResponseDto {
+		return this.base(user);
+	}
+
+	static toUpdateProfile(user: User): UpdateProfileUserResponseDto {
+		return this.base(user);
 	}
 }

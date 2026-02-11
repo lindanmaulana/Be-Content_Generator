@@ -15,7 +15,7 @@ export class UserPersistanceMapper {
 	}
 
 	static toPersistence(entity: User) {
-		return {
+		const data = {
 			name: entity.name,
 			email: entity.email,
 			password: entity.password,
@@ -23,5 +23,9 @@ export class UserPersistanceMapper {
 			created_at: entity.createdAt,
 			updated_at: entity.updatedAt,
 		};
+
+		Object.keys(data).forEach((key) => data[key] === undefined && delete data[key]);
+
+		return data;
 	}
 }

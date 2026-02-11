@@ -11,6 +11,12 @@ export class User {
 		private _created_at: Date,
 		private _updated_at: Date,
 	) {
+		if (this._email) {
+			const normalize = this._email.trim().toLocaleLowerCase();
+
+			if (!normalize.endsWith('@gmail.com')) throw new BadRequestException('Format email tidak valid');
+		}
+
 		if (this._role === ROLE_USERS.CUSTOMER) {
 			const normalize = this._name.toLocaleLowerCase();
 
@@ -42,11 +48,29 @@ export class User {
 		return new User(undefined, props.name, props.email, props.password, props.role, new Date(), new Date());
 	}
 
+	update(props: { name?: string; email?: string; password?: string }) {
+		if (props.name !== undefined) this.changeName(props.name);
+		if (props.email !== undefined) this._email = props.email;
+		if (props.password !== undefined) this._password = props.password;
+
+		this.updated();
+	}
+
 	changeEmail(email: string) {
 		const normalize = email.trim().toLowerCase();
 		if (!normalize.endsWith('@gmail.com')) throw new BadRequestException('Format email tidak valid');
 
-		this._email = email;
+		this._email = normalize;
+		this.updated();
+	}
+
+	changeName(name: string) {
+		const normalize = name.trim();
+
+		if (this._name === normalize)
+			throw new BadRequestException('Nama baru tidak boleh sama dengan nama sebelumnya!');
+
+		this._name = normalize;
 		this.updated();
 	}
 

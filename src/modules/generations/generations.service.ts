@@ -3,14 +3,7 @@ import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { calculatePagination } from '@/common/utils/pagination.util';
 import { Generation } from '@/modules/generations/domain/generations.entity';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import {
-	BadRequestException,
-	ConflictException,
-	ForbiddenException,
-	Inject,
-	Injectable,
-	NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { GenerationStatus } from '@prisma/client';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';

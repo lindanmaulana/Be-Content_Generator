@@ -8,4 +8,5 @@ export interface UserRepository {
 	findCount(pagination: PaginationUserParams): Promise<number>;
 
 	create(user: User): Promise<User>;
+	update(id: string, user: User): Promise<User>;
 }

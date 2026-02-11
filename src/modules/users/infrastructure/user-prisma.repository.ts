@@ -64,4 +64,19 @@ export class UserPrismaRepository extends BaseRepository {
 			return UserPersistanceMapper.toEntity(result);
 		});
 	}
+
+	async update(userId: string, user: User): Promise<User> {
+		return this.tryCatch(async () => {
+			const persistanceData = UserPersistanceMapper.toPersistence(user);
+
+			const result = await this.prismaService.user.update({
+				where: {
+					id: userId,
+				},
+				data: persistanceData,
+			});
+
+			return UserPersistanceMapper.toEntity(result);
+		});
+	}
 }
